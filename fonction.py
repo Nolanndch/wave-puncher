@@ -1,0 +1,365 @@
+import pygame
+import parametres
+import random
+import entities
+from parametres import taille_cell
+
+screen = parametres.ecran
+
+
+class case:  # classe qui gere les cases et permet leur contenu
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.contenu = None
+
+
+def creer_grille(n: int) -> dict:
+    # prend un entier en parametre et renvoie un dico de cases de n x n
+    dico = {}
+    for y in range(n):
+        for x in range(n):
+            dico[(x, y)] = case(x, y)
+
+    return dico
+
+
+def afficher_grille(screen, dico):
+    # affiche la grille de jeu principale au centre de l'ecran
+    largeur_grille = parametres.taille_grille * taille_cell
+    hauteur_grille = parametres.taille_grille * taille_cell
+
+    offset_x = (parametres.largeur_ecran - largeur_grille) // 2
+    offset_y = (parametres.hauteur_ecran - hauteur_grille) // 2
+
+    for cell in dico.values():
+        rect = pygame.Rect(
+            offset_x + cell.x * taille_cell,
+            offset_y + cell.y * taille_cell,
+            taille_cell,
+            taille_cell,
+        )
+
+        pygame.draw.rect(screen, parametres.BLEU_CLAIR, rect)
+        pygame.draw.rect(screen, parametres.NOIR, rect, 1)
+
+
+def afficher_joueur(screen, joueur):
+    # affiche le joueur dans la grille de jeu principale
+    largeur_grille = parametres.taille_grille * taille_cell
+    hauteur_grille = parametres.taille_grille * taille_cell
+
+    offset_x = (screen.get_width() - largeur_grille) // 2
+    offset_y = (screen.get_height() - hauteur_grille) // 2
+
+    rect = pygame.Rect(
+        offset_x + joueur.x * taille_cell,
+        offset_y + joueur.y * taille_cell,
+        taille_cell,
+        taille_cell,
+    )
+
+    pygame.draw.rect(screen, joueur.couleur, rect)
+
+
+def afficher_texte(texte, x, y, largeur, hauteur, couleur, taille):
+
+    if isinstance(texte, list):
+        texte = "".join(texte)
+
+    rendu = taille.render(texte, True, couleur)
+    screen.blit(rendu, ((x + largeur // 2) - 100, y + hauteur // 2))
+
+
+def contenue_grille(grille, num):
+    # place des mobs aleatoirement dans la grille de jeu principale
+    # le nombre de mob varie selon la difficulté et la vague en cours
+
+    if num == 2:
+        for i in range(parametres.nb_item_defaut):
+            x = random.randint(0, parametres.taille_grille - 1)
+            y = random.randint(0, parametres.taille_grille - 1)
+
+            if grille[x, y].contenu == None:
+                grille[x, y].contenu = random.choice((entities.armure, entities.soin))
+
+    else:
+        if (
+            parametres.facile_clicked == False
+            or parametres.moyen_clicked == False
+            or parametres.difficile_clicked == False
+        ):
+            difficulter = parametres.difficulter_defaut
+        if parametres.facile_clicked == True:
+            difficulter = 3
+            parametres.nb_item_defaut = 5
+        if parametres.moyen_clicked == True:
+            difficulter = 6
+            parametres.nb_item_defaut = 4
+        if parametres.difficile_clicked == True:
+            difficulter = 9
+            parametres.nb_item_defaut = 3
+
+        nb_enemie = parametres.wave_number * difficulter
+
+        for i in range(nb_enemie):
+            x = random.randint(0, parametres.taille_grille - 1)
+            y = random.randint(0, parametres.taille_grille - 1)
+
+            if grille[x, y].contenu == None:
+                grille[x, y].contenu = entities.Mob(x, y)
+
+        for i in range(parametres.nb_item_defaut):
+            x = random.randint(0, parametres.taille_grille - 1)
+            y = random.randint(0, parametres.taille_grille - 1)
+
+            if grille[x, y].contenu == None:
+                grille[x, y].contenu = random.choice((entities.armure, entities.soin))
+
+
+def tour():
+    # choisi au hasard le premier qui attaque
+    tour = random.randint(0, 1)
+
+    if tour % 2 == 0:
+        parametres.tour_de = "Joueur"
+        parametres.tour_de_jcj = "j1"
+
+    elif tour % 2 != 0:
+        parametres.tour_de = "enemi"
+        parametres.tour_de_jcj = "j2"
+
+
+def player_can_move(direction):
+    # verifie si le joueur peut se deplacer
+    if direction == "haut":
+        return entities.j1.y - 1 >= 0
+
+    if direction == "bas":
+        return entities.j1.y + 1 < parametres.ymax + 1
+
+    if direction == "gauche":
+        return entities.j1.x - 1 >= 0
+
+    if direction == "droite":
+        return entities.j1.x + 1 < parametres.xmax + 1
+
+
+def player_rencontre(grille):
+    # verifie si le joueur se trouve sur la meme case qu'un mob ou un objet
+
+    if parametres.tour_de_jcj == "j1" or parametres.etat_du_jeu == "play":
+
+        contenu = grille[entities.j1.x, entities.j1.y].contenu
+
+        if parametres.etat_du_jeu == "jcj":
+            if (entities.j1.x, entities.j1.y) == (entities.j2.x, entities.j2.y):
+                parametres.etat_du_jeu = "combat_jcj"
+
+        if isinstance(contenu, entities.Mob):
+            parametres.etat_du_jeu = "combat"
+            parametres.tour_deplacement = None
+            entities.ennemi_en_combat = grille[entities.j1.x, entities.j1.y].contenu
+
+        if isinstance(contenu, entities.Objet):
+            if contenu == entities.armure:
+                contenu.proteger()
+                grille[entities.j1.x, entities.j1.y].contenu = None
+
+            elif contenu == entities.soin:
+                entities.j1.inventaire.append(contenu)
+                grille[entities.j1.x, entities.j1.y].contenu = None
+
+    else:
+        contenu = grille[entities.j2.x, entities.j2.y].contenu
+
+        if parametres.etat_du_jeu == "jcj":
+            if (entities.j1.x, entities.j1.y) == (entities.j2.x, entities.j2.y):
+                parametres.etat_du_jeu = "combat_jcj"
+
+        if isinstance(contenu, entities.Mob):
+            parametres.etat_du_jeu = "combat"
+            parametres.tour_deplacement = None
+            entities.ennemi_en_combat = grille[entities.j2.x, entities.j2.y].contenu
+
+        elif isinstance(contenu, entities.Objet):
+            if contenu == entities.armure:
+                contenu.proteger()
+                grille[entities.j2.x, entities.j2.y].contenu = None
+
+            elif contenu == entities.soin:
+                entities.j2.inventaire.append(contenu)
+                grille[entities.j2.x, entities.j2.y].contenu = None
+
+
+def etat_precedent(loop):
+    # reviens a l'etat de jeu inferieur a celui actuel
+    if parametres.etat_du_jeu == "menu":
+        loop = False
+        pygame.quit()
+
+    if (
+        parametres.etat_du_jeu == "play"
+        or parametres.etat_du_jeu == "parametre"
+        or parametres.etat_du_jeu == "rules"
+        or parametres.etat_du_jeu == "mort"
+        or parametres.etat_du_jeu == "jcj"
+        or parametres.etat_du_jeu == "victoire_j1"
+        or parametres.etat_du_jeu == "victoire_j2"
+    ):
+        parametres.etat_du_jeu = "menu"
+
+    if parametres.etat_du_jeu == "niveau":
+        parametres.etat_du_jeu = "play"
+
+
+def reset_grille(grille):
+    # nettoie la grille apres la mort du joueur et la rend prete a reprendre une partie
+    for cell in grille.values():
+        cell.contenu = None
+
+    if parametres.etat_du_jeu == "jcj":
+        contenue_grille(grille, 2)
+    else:
+        contenue_grille(grille, 1)
+
+
+def draw_health_bar(
+    screen, x, y, current, maximum, width=200, height=18, label="", color_override=None
+):
+    ratio = max(current / maximum, 0)
+
+    if color_override:
+        color = color_override  # ← couleur fixe (armure)
+    elif ratio > 0.6:
+        color = (34, 197, 94)  # Vert
+    elif ratio > 0.3:
+        color = (234, 179, 8)  # Jaune
+    else:
+        color = (239, 68, 68)  # Rouge
+
+    pygame.draw.rect(screen, (60, 60, 60), (x, y, width, height), border_radius=5)
+    if ratio > 0:
+        pygame.draw.rect(
+            screen, color, (x, y, int(width * ratio), height), border_radius=5
+        )
+    pygame.draw.rect(screen, (0, 0, 0), (x, y, width, height), 2, border_radius=5)
+
+    font = pygame.font.SysFont(None, 24)
+    texte = font.render(f"{label}{current}/{maximum}", True, parametres.NOIR)
+    screen.blit(texte, (x + width + 8, y))
+
+
+def change_dificulty(dificulty, grille):
+
+    if dificulty == "facile":
+        parametres.facile_clicked = True
+        parametres.moyen_clicked = False
+        parametres.difficile_clicked = False
+
+    if dificulty == "moyen":
+        parametres.moyen_clicked = True
+        parametres.facile_clicked = False
+        parametres.difficile_clicked = False
+
+    if dificulty == "difficile":
+        parametres.difficile_clicked = True
+        parametres.facile_clicked = False
+        parametres.moyen_clicked = False
+
+    reset_grille(grille)
+
+
+def refill(grille):
+    # replace des mobs et objets dans la grille si elle est vide
+    mobs = [
+        cell.contenu
+        for cell in grille.values()
+        if isinstance(cell.contenu, entities.Mob)
+    ]
+    if mobs == []:
+        reset_grille(grille)
+
+
+def recompense(grille):
+    if entities.ennemi_en_combat.life <= 0:
+        x = entities.ennemi_en_combat.x
+        y = entities.ennemi_en_combat.y
+        coord = (x + 1, y)
+        if coord in grille and grille[coord].contenu == None:
+            grille[coord].contenu = random.choice([entities.soin, entities.armure])
+
+
+def bouger_mob(grille):
+    import pygame
+
+    temps_actuel = pygame.time.get_ticks()
+
+    if temps_actuel - parametres.dernier_mouvement_mob < parametres.delai_mouvement_mob:
+        return
+
+    mobs_a_bouger = [
+        cell.contenu
+        for cell in grille.values()
+        if isinstance(cell.contenu, entities.Mob)
+    ]
+    if not mobs_a_bouger:
+        parametres.tour_deplacement = "joueur"
+        return
+
+    for enemi in mobs_a_bouger:
+        if enemi not in parametres.mobs_pas_restants:
+            parametres.mobs_pas_restants[enemi] = parametres.deplacement_mob_max
+
+    for enemi in mobs_a_bouger:
+        if parametres.mobs_pas_restants.get(enemi, 0) > 0:
+            grille[enemi.x, enemi.y].contenu = None
+            enemi.se_deplacer(grille)
+            player_rencontre(grille)
+            grille[enemi.x, enemi.y].contenu = enemi
+            parametres.mobs_pas_restants[enemi] -= 1
+
+    parametres.dernier_mouvement_mob = temps_actuel
+
+    if parametres.mobs_pas_restants and all(
+        p == 0 for p in parametres.mobs_pas_restants.values()
+    ):
+        parametres.mobs_pas_restants.clear()
+        parametres.tour_deplacement = "joueur"
+
+
+def _draw_stat_card(
+    screen, x, y, w, h, label, current, maximum, bar_color, font_small, font_label
+):
+    """Dessine une carte de stat avec label, barre et valeur."""
+    PANEL_CARD = (24, 28, 38)
+    PANEL_BORDER = (40, 46, 60)
+    TEXT_MAIN = (230, 235, 245)
+    TEXT_MUTED = (110, 120, 145)
+
+    # Fond de la carte
+    card_rect = pygame.Rect(x, y, w, h)
+    pygame.draw.rect(screen, PANEL_CARD, card_rect, border_radius=6)
+    pygame.draw.rect(screen, PANEL_BORDER, card_rect, width=1, border_radius=6)
+
+    # Label
+    lbl_surf = font_label.render(label, True, TEXT_MUTED)
+    screen.blit(lbl_surf, (x + 10, y + 8))
+
+    # Valeur
+    val_surf = font_small.render(f"{current}/{maximum}", True, TEXT_MAIN)
+    screen.blit(val_surf, (x + w - val_surf.get_width() - 10, y + 8))
+
+    # Barre de fond
+    bar_x, bar_y = x + 10, y + 32
+    bar_w, bar_h = w - 20, 6
+    pygame.draw.rect(
+        screen, PANEL_BORDER, (bar_x, bar_y, bar_w, bar_h), border_radius=3
+    )
+
+    # Barre remplie
+    fill = max(0, min(1, current / maximum)) if maximum > 0 else 0
+    if fill > 0:
+        pygame.draw.rect(
+            screen, bar_color, (bar_x, bar_y, int(bar_w * fill), bar_h), border_radius=3
+        )
