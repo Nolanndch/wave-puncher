@@ -9,7 +9,7 @@ on ramasse des objets et on affronte des vagues de monstres.
 - **Code du jeu** : Nolann Duchaussoy. Il a écrit la logique du jeu : déplacements, tours de jeu,
   combats, vagues, objets, progression du joueur, modes solo et joueur contre joueur.
 - **Interface** : faite avec l'aide de Claude (IA d'Anthropic), surtout dans `UI.py`.
-- Projet de groupe mené avec Riley Huriere, qui a participé aux idées de jeu.
+- Projet de groupe mené avec Riley Huriere ([@Leyz0xx](https://github.com/Leyz0xx)), qui a participé aux idées de jeu.
 
 ## Modes de jeu
 
