@@ -1,27 +1,28 @@
 # The Wave Puncher
 
-Jeu de survie au tour par tour en Python et Pygame, réalisé pour le projet de Terminale NSI
-(lycée Charlotte Perriand, 2025-2026). Il s'inspire des anciens Pokémon : on explore une grille,
-on ramasse des objets et on affronte des vagues de monstres.
+C'est le jeu que j'ai fait pour le projet de Terminale NSI (lycée Charlotte Perriand,
+2025-2026). C'est un jeu de survie au tour par tour en Python avec Pygame, un peu inspiré des
+anciens Pokémon : on se balade sur une grille, on ramasse des objets et on affronte des vagues
+de monstres.
 
 ## Qui a fait quoi
 
-- **Code du jeu** : Nolann Duchaussoy. Il a écrit la logique du jeu : déplacements, tours de jeu,
-  combats, vagues, objets, progression du joueur, modes solo et joueur contre joueur.
-- **Interface** : faite avec l'aide de Claude (IA d'Anthropic), surtout dans `UI.py`.
-- Projet de groupe mené avec Riley Huriere ([@Leyz0xx](https://github.com/Leyz0xx)), qui a participé aux idées de jeu.
+- **Le code du jeu, c'est moi** : les déplacements, les tours de jeu, les combats, les vagues,
+  les objets, la progression du joueur et les deux modes de jeu.
+- **Pour l'interface**, je me suis aidé de Claude, l'IA d'Anthropic, surtout pour `UI.py`.
+- On était en groupe avec Riley Huriere ([@Leyz0xx](https://github.com/Leyz0xx)), qui a
+  participé aux idées du jeu.
 
-## Modes de jeu
+## Les modes de jeu
 
-- **Solo** : survivre à toutes les vagues d'ennemis. Le nombre de vagues dépend de la difficulté
+- **Solo** : il faut survivre à toutes les vagues d'ennemis. Leur nombre dépend de la difficulté
   choisie (facile, moyen ou difficile). Entre deux vagues, on choisit une amélioration : plus de
   déplacements, plus de vie ou plus de force.
-- **Joueur contre joueur** : les deux joueurs ramassent le plus d'objets possible sur la carte avant
-  la fin du décompte. Ensuite le combat commence au tour par tour, et le premier joueur à attaquer
-  est tiré au sort.
+- **Joueur contre joueur** : les deux joueurs ramassent le plus d'objets possible avant la fin du
+  décompte, puis le combat commence au tour par tour. Celui qui attaque en premier est tiré au sort.
 
-Pendant un combat, on peut **attaquer** ou **se soigner** avec les objets de l'inventaire : soin,
-épée (dégâts) et plastron (protection).
+En combat, on peut attaquer ou se soigner avec les objets ramassés : soin, épée (plus de dégâts)
+et plastron (plus de protection).
 
 ## Lancer le jeu
 
@@ -32,23 +33,19 @@ python main.py
 
 Le jeu s'ouvre en plein écran.
 
-| Touche | Action |
-|--------|--------|
-| Flèches | Se déplacer sur la grille |
-| Souris | Menus, actions de combat, choix des améliorations |
-| Échap | Revenir à l'écran précédent |
-| E | Quitter |
+- **Flèches** : se déplacer
+- **Souris** : menus, actions de combat, choix des améliorations
+- **Échap** : revenir à l'écran précédent
+- **E** : quitter
 
-## Organisation du code
+## Comment le code est organisé
 
-| Fichier | Rôle |
-|---------|------|
-| `main.py` | Boucle de jeu et gestion des états (menu, partie, combat, niveau, JcJ…) |
-| `fonction.py` | Logique du jeu : déplacements, combats, vagues, grille |
-| `entities.py` | Classes `Player`, `Mob` et `Objet` |
-| `parametres.py` | Réglages : taille de la grille, délais, difficulté, couleurs |
-| `bouton.py` | Zones cliquables des boutons |
-| `UI.py` | Affichage des écrans et de l'interface |
+- `main.py` : la boucle de jeu et les différents états (menu, partie, combat, JcJ…)
+- `fonction.py` : la logique du jeu (déplacements, combats, vagues, grille)
+- `entities.py` : les classes `Player`, `Mob` et `Objet`
+- `parametres.py` : les réglages (taille de la grille, délais, difficulté, couleurs)
+- `bouton.py` : les zones cliquables des boutons
+- `UI.py` : l'affichage des écrans
 
-On peut ajouter facilement de nouveaux objets dans `entities.py` et de nouveaux réglages dans
-`parametres.py`.
+J'ai organisé le code pour qu'on puisse facilement ajouter des objets dans `entities.py` ou
+changer les réglages dans `parametres.py`.
